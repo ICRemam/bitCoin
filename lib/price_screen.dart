@@ -27,7 +27,9 @@ class _PriceScreenState extends State<PriceScreen> {
       onChanged: (value) {
         setState(() {
           selectedCurrency = value;
-          getData();
+          getBData();
+          getEData();
+          getLData();
         });
       },
     );
@@ -45,23 +47,46 @@ class _PriceScreenState extends State<PriceScreen> {
       onSelectedItemChanged: (selectedIndex) {
         setState(() {
           selectedCurrency = currenciesList[selectedIndex];
-          getData();
+          getBData();
+          getEData();
+          getLData();
         });
       },
       children: pickerItems,
     );
   }
 
-  String value = '?';
+  String bValue = '?';
+  String eValue = '?';
+  String lValue = '?';
 
-  //TODO 7: Figure out a way of displaying a '?' on screen while we're waiting for the price data to come back. Hint: You'll need a ternary operator.
-
-  //TODO 6: Update this method to receive a Map containing the crypto:price key value pairs. Then use that map to update the CryptoCards.
-  void getData() async {
+  void getBData() async {
     try {
-      double data = await CoinData().getCoinData(selectedCurrency);
+      double data = await CoinData().getBitCoinData(selectedCurrency);
       setState(() {
-        value = data.toStringAsFixed(0);
+        bValue = data.toStringAsFixed(0);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getEData() async {
+    try {
+      double data = await CoinData().getEtCoinData(selectedCurrency);
+      setState(() {
+        eValue = data.toStringAsFixed(0);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getLData() async {
+    try {
+      double data = await CoinData().getLtCoinData(selectedCurrency);
+      setState(() {
+        lValue = data.toStringAsFixed(0);
       });
     } catch (e) {
       print(e);
@@ -71,10 +96,10 @@ class _PriceScreenState extends State<PriceScreen> {
   @override
   void initState() {
     super.initState();
-    getData();
+    getBData();
+    getEData();
+    getLData();
   }
-
-  //TODO: For bonus points, create a method that loops through the cryptoList and generates a CryptoCard for each.
 
   @override
   Widget build(BuildContext context) {
@@ -86,29 +111,25 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          //TODO 1: Refactor this Padding Widget into a separate Stateless Widget called CryptoCard, so we can create 3 of them, one for each cryptocurrency.
-          //TODO 2: You'll need to able to pass the selectedCurrency, value and cryptoCurrency to the constructor of this CryptoCard Widget.
-          //TODO 3: You'll need to use a Column Widget to contain the three CryptoCards.
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              RepeatablePadding(
+                value: bValue,
+                selectedCurrency: selectedCurrency,
+                cryptoCurrency: 'BTC',
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $value $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
+              RepeatablePadding(
+                value: eValue,
+                selectedCurrency: selectedCurrency,
+                cryptoCurrency: 'ETH',
               ),
-            ),
+              RepeatablePadding(
+                value: lValue,
+                selectedCurrency: selectedCurrency,
+                cryptoCurrency: 'LTC',
+              ),
+            ],
           ),
           Container(
             height: 150.0,
@@ -118,6 +139,44 @@ class _PriceScreenState extends State<PriceScreen> {
             child: Platform.isIOS ? iOSPicker() : androidDropdown(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class RepeatablePadding extends StatelessWidget {
+  const RepeatablePadding({
+    Key key,
+    @required this.value,
+    @required this.selectedCurrency,
+    @required this.cryptoCurrency,
+  }) : super(key: key);
+
+  final String value;
+  final String selectedCurrency;
+  final String cryptoCurrency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      child: Card(
+        color: Colors.lightBlueAccent,
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text(
+            '1 $cryptoCurrency = $value $selectedCurrency',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
